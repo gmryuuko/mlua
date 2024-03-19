@@ -3,6 +3,7 @@ use serde::{ser, Serialize};
 use super::LuaSerdeExt;
 use crate::error::{Error, Result};
 use crate::lua::Lua;
+use crate::Number;
 use crate::string::String;
 use crate::table::Table;
 use crate::value::{IntoLua, Value};
@@ -427,6 +428,8 @@ impl<'lua> ser::SerializeTupleVariant for SerializeTupleVariant<'lua> {
     }
 }
 
+const SERDE_JSON_ARBITRARY_PRECISION_KEY: &str = "$serde_json::private::Number";
+
 #[doc(hidden)]
 pub struct SerializeMap<'lua> {
     table: Table<'lua>,
@@ -461,6 +464,16 @@ impl<'lua> ser::SerializeMap for SerializeMap<'lua> {
     }
 
     fn end(self) -> Result<Value<'lua>> {
+        #[cfg(feature = "serde-json-arbitrary-precision")]
+        {
+            let lua = self.table.0.lua;
+            if let Ok(number) = self.table.get::<_, String>(SERDE_JSON_ARBITRARY_PRECISION_KEY) {
+                if let Ok(number) = number.to_str()?.parse::<Number>() {
+                    return Ok(Value::Number(number));
+                }
+            }
+        }
+
         Ok(Value::Table(self.table))
     }
 }
