@@ -427,7 +427,7 @@ impl<'lua> ser::SerializeTupleVariant for SerializeTupleVariant<'lua> {
     }
 }
 
-#[cfg(feature = "serde-json-arbitrary-precision")]
+#[cfg(feature = "ignore-serde-json-arbitrary-precision")]
 const SERDE_JSON_ARBITRARY_PRECISION_KEY: &str = "$serde_json::private::Number";
 
 #[doc(hidden)]
@@ -464,7 +464,7 @@ impl<'lua> ser::SerializeMap for SerializeMap<'lua> {
     }
 
     fn end(self) -> Result<Value<'lua>> {
-        #[cfg(feature = "serde-json-arbitrary-precision")]
+        #[cfg(feature = "ignore-serde-json-arbitrary-precision")]
         {
             let lua = self.table.0.lua;
             if let Ok(number) = self.table.get::<_, String>(SERDE_JSON_ARBITRARY_PRECISION_KEY) {
